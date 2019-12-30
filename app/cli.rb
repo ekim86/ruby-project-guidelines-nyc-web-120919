@@ -1,7 +1,7 @@
 class CommandLineInterface
 
   def greet
-    puts "Welcome to Movie Reservations 🎬  🍿"
+    puts "Welcome to Movie Reservations! 🎬  🍿"
   end
 
   def start
