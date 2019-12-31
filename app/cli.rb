@@ -18,20 +18,20 @@ class CommandLineInterface
         user_email_input = prompt.ask("Email:")
         user = User.find_by(email: user_email_input)
         user_password_input = prompt.mask("Password:")
-        counter = 0
-        while counter < 4 
-          user.password != user_password_input 
+        if user.password != user_password_input
           puts "Wrong password, please try again."
-          user = nil
-          user_password_input = prompt.mask("Password:")
-          counter += 1
+          attempt = 0
+          while attempt < 3
+            user_password_input = prompt.mask("Password:")
+            if user.password == user_password_input
+              puts "hello"
+              # can delete hello
+              break
+            end
+            attempt += 1
+            puts "Wrong password, please try again"
+          end
         end
-
-        # if user.password != user_password_input
-        #   puts "Wrong password, please try again."
-        #   user = nil
-        #   user_password_input = prompt.mask("Password:")
-        # end
         user
       end
       menu.choice 'Create an account', -> do
@@ -45,12 +45,12 @@ class CommandLineInterface
         )
       end
       menu.choice 'Exit', -> do
-        bye
+        exit_app
       end
     end
   end
 
-  def bye
+  def exit_app
     puts "See you next time! 👋"
   end
 
