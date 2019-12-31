@@ -5,6 +5,7 @@ class CommandLineInterface
   end
 
   def start
+    prompt =  TTY::Prompt.new
     pastel = Pastel.new
     
     choices = [
@@ -13,16 +14,16 @@ class CommandLineInterface
       {name: 'Exit', value: 3}
     ]
   
-    user_input = @prompt.select('What would you like to do?', choices) do |menu|
+    user_input = prompt.select('What would you like to do?', choices) do |menu|
       menu.choice 'Login', -> do
-        user_email_input = @prompt.ask("Email:")
+        user_email_input = prompt.ask("Email:")
         user = User.find_by(email: user_email_input)
-        user_password_input = @prompt.mask("Password:")
+        user_password_input = prompt.mask("Password:")
         if user.password != user_password_input
           puts "Wrong password, please try again."
           attempt = 0
           while attempt < 2
-            user_password_input = @prompt.mask("Password:")
+            user_password_input = prompt.mask("Password:")
             if user.password == user_password_input
               puts pastel.bright_magenta("Hello #{user.name.capitalize}")
               # can delete hello
@@ -40,9 +41,9 @@ class CommandLineInterface
         # still shows up when you exit with wrong password
       end
       menu.choice 'Create an account', -> do
-        user_name_input = @prompt.ask("Please enter your name:")
-        user_email_input = @prompt.ask("Please enter your email address:")
-        user_password_input = @prompt.mask("Please create a password:")
+        user_name_input = prompt.ask("Please enter your name:")
+        user_email_input = prompt.ask("Please enter your email address:")
+        user_password_input = prompt.mask("Please create a password:")
         User.create(
           name: user_name_input,
           email: user_email_input,
@@ -57,6 +58,7 @@ class CommandLineInterface
 
 
   def choices(user)
+    prompt = TTY::Prompt.new
     
     choices = [
       {name: 'See all reserved tickets', value: 1},
@@ -64,7 +66,7 @@ class CommandLineInterface
       {name: 'Exit', value: 3}
     ]
 
-    user_input = @prompt.select('Please select a prompt', choices)
+    user_input = prompt.select('Please select a prompt', choices)
   end
 
   def all_reservations(user)
@@ -76,8 +78,8 @@ class CommandLineInterface
       }
     end
     reservations << { name: 'Go Back', value: 0}
-
-    selected_reservation_id = @prompt.select('Select to see more details', reservations)
+    prompt = TTY::Prompt.new
+    selected_reservation_id = prompt.select('Select to see more details', reservations)
 
     if selected_reservation_id > 0
       selected_reservation = Reservation.find(selected_reservation_id)
@@ -86,6 +88,7 @@ class CommandLineInterface
   end
 
   def reservation_detail(reservation)
+    prompt = TTY::Prompt.new
     puts "-----------------------------------------------"
     puts "🎟  You have #{reservation.ticket_quantity} ticket(s) reserved for #{reservation.movie.title}"
     puts "-----------------------------------------------"
@@ -95,7 +98,7 @@ class CommandLineInterface
       { name: 'Delete ticket reservation', value: 2 },
       { name: 'Go back to all my ticket reservations', value: 3 }
     ]
-    user_input = @prompt.select("Please choose the following", choices)
+    user_input = prompt.select("Please choose the following", choices)
     case user_input
     when 1
       update_reservation(reservation)
@@ -107,20 +110,22 @@ class CommandLineInterface
   end
 
   def update_reservation(reservation)
+    prompt = TTY::Prompt.new
     reservation_detail = [
       { name: "Movie: #{reservation.movie.title}", disabled: "👎  can't update" },
       { name: "Time: #{reservation.movie.showtimes}", value: "Time" },
       { name: "Ticket quantity: #{reservation.ticket_quantity}", value: "Ticket quantity"}
     ]
-    user_input = @prompt.select('Choose what you would like to update:', reservation_detail)
+    user_input = prompt.select('Choose what you would like to update:', reservation_detail)
     case user_input
     when "Showtime"
       time_list = ["12:00 PM", "12:15 PM", "12:30 PM", "12:45 PM", "1:00 PM"]
-      new_time = @prompt.select('Choose a new time', time_list, filter: true)
+      new_time = prompt.selec
+      t('Choose a new time', time_list, filter: true)
       reservation.update(time: new_time)
     when "Ticket quantity"
       ticket_quantity_list = (1..5).to_a
-      new_ticket_quantity = @prompt.select(
+      new_ticket_quantity = prompt.select(
         'Change how many tickets you want',
         ticket_quantity_list,
         filter: true
@@ -132,11 +137,12 @@ class CommandLineInterface
   end
 
   def delete_reservation(reservation)
+    prompt = TTY::Prompt.new
     options = [
       { name: 'Y', value: 'y'},
       { name: 'N', value: 'n'}
     ]
-    delete_check = @prompt.select("Are you sure you want to delete the reserved ticket(s)?", options)
+    delete_check = prompt.select("Are you sure you want to delete the reserved ticket(s)?", options)
     case delete_check
     when 'y'
       reservation.delete
@@ -147,39 +153,40 @@ class CommandLineInterface
   end
   
   def make_reservation(user)
+    prompt = TTY::Prompt.new
     movie_list = Movie.all.map(&:title)
-    chosen_movie = @prompt.select(
+    chosen_movie = prompt.select(
       'Choose your movie',
       movie_list,
       filter: true
       )
       movie = Movie.find_by(title: chosen_movie)
       year_list = [2019, 2020]
-      chosen_year = @prompt.select(
+      chosen_year = prompt.select(
         'Please select a year',
         year_list,
         filter: true
         )
         month_list = ["January", "February", "March", "April", "May", "June", "July", "August", "Septemer", "October", "November", "December"]
-        chosen_month = @prompt.select(
+        chosen_month = prompt.select(
           'Please select a month',
           month_list,
           filter: true
           )
           day_list = (1..31).to_a
-          chosen_day = @prompt.select(
+          chosen_day = prompt.select(
             'Please select a day',
             day_list,
             filter: true
             )
             time_list = ["12:00 PM", "12:15 PM", "12:30 PM", "12:45 PM", "1:00 PM"]
-            chosen_time = @prompt.select(
+            chosen_time = prompt.select(
               'Please select a time',
               time_list,
               filter: true
               )
               ticket_quantity_list = (1..5).to_a
-              chosen_ticket_quantity = @prompt.select(
+              chosen_ticket_quantity = prompt.select(
                 'How many tickets would you like?',
                 ticket_quantity_list,
                 filter: true
@@ -200,9 +207,12 @@ class CommandLineInterface
     puts "See you next time! 👋"
   end
 
+  def back
+    puts "backkk"
+  end
+
   def run
     greet
-    @prompt =  TTY::Prompt.new
     user = start
     return exit_app if !user.is_a?(User)
 
