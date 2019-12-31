@@ -26,10 +26,12 @@ class CommandLineInterface
             if user.password == user_password_input
               puts "hello"
               # can delete hello
+              back
+              # can hit another method
               break
             end
             attempt += 1
-            puts "Wrong password, please try again"
+            puts "Wrong password, please try again."
           end
         end
         user
@@ -54,6 +56,9 @@ class CommandLineInterface
     puts "See you next time! 👋"
   end
 
+  def back
+    puts "backkk"
+  end
 
   def run
     greet
