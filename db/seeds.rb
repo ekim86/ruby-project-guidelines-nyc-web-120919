@@ -15,7 +15,7 @@ justin = User.create(name: "Justin", email: "justin@email.com", password: "4444"
 # cats_time = Showtime.create(name: "Steven", email: "steven@email.com", password: "3333")
 # frozen_2_time = Showtime.create(name: "Justin", email: "justin@email.com", password: "4444")
 
-uncut_gems = Movie.create(title: "Uncut Gems", synopsis: "A charismatic jeweler makes a high-stakes bet that could lead to the windfall of a lifetime. In a precarious high-wire act, he must balance business, family and adversaries on all sides in pursuit of the ultimate win.", content_rating: "R")
+uncut_gems = Movie.create(title: "Uncut Gems", synopsis: "A charismatic jeweler makes a high-stakes bet that could lead to the windfall of a lifetime. In a precarious high-wire act, he must balance business, family and adversaries on all sides in pursuit of the ultimate win.", content_rating: "🔞R")
 star_wars = Movie.create(title: "Star Wars: The Rise of Skywalker", synopsis: "The surviving Resistance faces the First Order once more as Rey, Finn and Poe Dameron's journey continues. With the power and knowledge of generations behind them, the final battle commences.", content_rating: "PG-13")
 jumanji = Movie.create(title: "Jumanji: The Next Level", synopsis: "When Spencer goes back into the fantastical world of Jumanji, pals Martha, Fridge and Bethany re-enter the game to bring him home. But the game is now broken -- and fighting back. Everything the friends know about Jumanji is about to change, as they soon discover there's more obstacles and more danger to overcome.", content_rating: "PG-13")
 cats = Movie.create(title: "Cats", synopsis: "A tribe of cats must decide yearly which one will ascend to the Heaviside Layer and come back to a new life.", content_rating: "PG")
