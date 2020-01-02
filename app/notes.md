@@ -6,6 +6,18 @@ class CommandLineInterface
     puts "Welcome to Movie Reservations! 🎬  🍿"
   end
 
+  # def start
+  #   user_input = @prompt.select(
+  #     "What Would You Like To Do?",
+  #     cycle: true,
+  #     symbols: {marker: '🍿'}
+  #   ) do |menu|
+  #       menu.choice "Login", -> { login }
+  #       menu.choice "Create An Account", -> { create_account }
+  #       menu.choice "Exit", -> { exit_app }
+  #   end
+  # end
+
   def start
     
     choices = [
@@ -28,34 +40,82 @@ class CommandLineInterface
     end
   end
 
-  def login
-    user_email_input = @prompt.ask("Email:")
-    user = User.find_by(email: user_email_input)
-    attempt = 1
-    while attempt < 4
-      user_password_input = @prompt.mask("Password:")
-      if user.password == user_password_input
-        puts @pastel.bright_cyan(@font.write("Hi #{user.name}"))
-        break
-      elsif user.password != user_password_input 
-        @prompt.error "Wrong password, please try again."
-        user = nil if attempt == 3
+  # def login
+  #   user_email_input = @prompt.ask("Email:")
+  #   user = User.find_by(email: user_email_input)
+  #   attempt = 1
+  #   while attempt < 4
+  #     user_password_input = @prompt.mask("Password:")
+  #     if user.password == user_password_input
+  #       puts @pastel.bright_cyan(@font.write("Hi #{user.name}"))
+  #       break
+  #     elsif user.password != user_password_input 
+  #       @prompt.error "Wrong password, please try again."
+  #       user = nil if attempt == 3
+  #     end
+  #     attempt += 1
+  #   end
+  #   user
+  # end
+
+def login
+    email_input = @prompt.ask("Please enter your email address:")
+    password_input = @prompt.mask("Please enter your password:")
+    user = User.find_by(email: email_input)
+      if user && user.password == password_input
+        @user = user
+        puts @pastel.bright_cyan(@font.write("Hi   #{user.name}"))
+        choices(@user)
+        binding.pry
+      else
+        @prompt.error("Email or password is incorrect, please try again.")
+        @prompt.select("", cycle: true, symbols: {marker: '🍿'}) do |menu|
+          menu.choice "Try Again", -> { login }
+          menu.choice "Create An Account", -> { create_account }
+          menu.choice "Exit", -> { exit_app }
+        end
       end
-      attempt += 1
-    end
-    user
   end
 
-  def create_account
-      user_name_input = @prompt.ask("Please enter your name:")
-      user_email_input = @prompt.ask("Please enter your email address:")
-      user_password_input = @prompt.mask("Please create a password:")
-      User.create(
-        name: user_name_input,
-        email: user_email_input,
-        password: user_password_input
-      )
-  end
+  # def create_account
+  #     user_name_input = @prompt.ask("Please enter your name:")
+  #     user_email_input = @prompt.ask("Please enter your email address:")
+  #     user_password_input = @prompt.mask("Please create a password:")
+  #     User.create(
+  #       name: user_name_input,
+  #       email: user_email_input,
+  #       password: user_password_input
+  #     )
+  # end
+
+  # def create_account
+  #   email_input = @prompt.ask("Please enter your email address:")
+  #   user = User.find_by(email: email_input)
+  #     if user
+  #       @prompt.error("This email account is already registered. Please login.")
+  #       @prompt.select("", cycle: true, symbols: {marker: '🍿'}) do |menu|
+  #         menu.choice "Login", -> { login }
+  #         menu.choice "Create An Account", -> { create_account }
+  #         menu.choice "Exit", -> { exit_app }
+  #       end
+  #     else
+  #       name_input = @prompt.ask("Please enter your name:")
+  #       password_input = @prompt.mask("Please create a password:")
+  #       user = User.create(name: name_input, email: email_input, password: password_input)
+  #       # @user = user
+  #       puts @pastel.bright_cyan(@font.write("Hi   #{user.name}"))
+  #     end
+  #     choices(user)
+  #   end
+
+
+  # def choices(user)
+  #   @prompt.select("What would you like to do?") do |menu|
+  #     menu.choice "See all reserved tickets", -> { all_tickets(user) }
+  #     menu.choice "Make a new ticket reservation", -> { make_ticket(user) }
+  #     menu.choice "Exit", -> { exit_app }
+  #   end
+  # end
 
   def choices(user)
     
@@ -64,12 +124,34 @@ class CommandLineInterface
       {name: 'Make a ticket', value: 2},
       {name: 'Exit', value: 3}
     ]
-
     user_input = @prompt.select('Please select a prompt', choices, cycle: true, symbols: {marker: '🍿'})
+    binding.pry
   end
 
+#   def all_tickets(user)
+#     user_tickets = @user.tickets.reload
+#     if user.tickets[0] == nil
+#       @prompt.select("No Reservations Yet. Please Make a Reservation") do |menu|
+#         binding.pry
+#         menu.choice "Make a New Ticket Reservation", -> { make_ticket(user) }
+#         menu.choice "Go Back", -> { choices(user) }
+#         menu.choice "Exit", -> { exit_app }
+#       end
+#     else
+#       @prompt.select("") do |menu|
+#         tickets = user_tickets.map do |ticket|
+#         puts ":raised_hands:  You reserved #{ticket.ticket_quantity} ticket(s) for #{ticket.movie.title}"
+#         end
+#       menu.choice "Go Back", -> { choices(user) }
+#       menu.choice "Update a Reservation", -> { update_tickets(ticket) }
+#       menu.choice "Exit", -> { exit_app }
+#       end
+#   end
+# end
+
   def all_tickets(user)
-    # binding.pry
+    puts "testing"
+    binding.pry
     user_tickets = user.tickets.reload
     tickets = user_tickets.map do |ticket|
       {
@@ -131,7 +213,7 @@ class CommandLineInterface
     when "Showtime"
       # time_list = ticket.movie.showtimes.where(theater: ticket.theater)
       time_list = ticket.theater.showtimes.where(movie: ticket.movie).map(&:time).uniq
-      binding.pry
+      new_time = time_list.map 
       new_time = @prompt.select("Choose a new time", time_list, filter: true, cycle: true, symbols: {marker: '🍿'})
       ticket.showtime.update(time: new_time)
     when "Ticket quantity"

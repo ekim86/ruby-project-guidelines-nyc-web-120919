@@ -131,7 +131,7 @@ class CommandLineInterface
     when "Showtime"
       # time_list = ticket.movie.showtimes.where(theater: ticket.theater)
       time_list = ticket.theater.showtimes.where(movie: ticket.movie).map(&:time).uniq
-      # binding.pry
+      binding.pry
       new_time = @prompt.select("Choose a new time", time_list, filter: true, cycle: true, symbols: {marker: '🍿'})
       ticket.showtime.update(time: new_time)
     when "Ticket quantity"
