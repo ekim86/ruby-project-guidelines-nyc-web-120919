@@ -14,7 +14,12 @@ class CommandLineInterface
       {name: 'Exit', value: 3}
     ]
   
-    user_input = @prompt.select('What would you like to do?', choices, cycle: true) do |menu|
+    user_input = @prompt.select(
+      'What would you like to do?',
+        choices,
+        cycle: true,
+        symbols: {marker: '🍿'}
+      ) do |menu|
       menu.choice 'Login', -> { login }
       menu.choice 'Create an account', -> { create_account }
       menu.choice 'Exit', -> do
@@ -60,7 +65,7 @@ class CommandLineInterface
       {name: 'Exit', value: 3}
     ]
 
-    user_input = @prompt.select('Please select a prompt', choices, cycle: true)
+    user_input = @prompt.select('Please select a prompt', choices, cycle: true, symbols: {marker: '🍿'})
   end
 
   def all_tickets(user)
@@ -74,7 +79,7 @@ class CommandLineInterface
     end
     tickets << { name: 'Go Back', value: 0}
 
-    selected_ticket_id = @prompt.select('Select to see more details', tickets, cycle: true)
+    selected_ticket_id = @prompt.select('Select to see more details', tickets, cycle: true, symbols: {marker: '🍿'})
 
     if selected_ticket_id > 0
       selected_ticket = Ticket.find(selected_ticket_id)
@@ -101,7 +106,7 @@ class CommandLineInterface
       { name: 'Remove ticket', value: 2 },
       { name: 'Go back to all my movie tickets', value: 3 }
     ]
-    user_input = @prompt.select("Please choose the following", choices, cycle: true)
+    user_input = @prompt.select("Please choose the following", choices, cycle: true, symbols: {marker: '🍿'})
     case user_input
     when 1
       update_ticket(ticket)
@@ -121,12 +126,13 @@ class CommandLineInterface
       { name: "Ticket quantity: #{ticket.ticket_quantity}", value: "Ticket quantity"}
     ]
   
-    user_input = @prompt.select('Choose what you would like to update:', ticket_detail, cycle: true)
+    user_input = @prompt.select('Choose what you would like to update:', ticket_detail, cycle: true, symbols: {marker: '🍿'})
     case user_input
     when "Showtime"
       # time_list = ticket.movie.showtimes.where(theater: ticket.theater)
       time_list = ticket.theater.showtimes.where(movie: ticket.movie).map(&:time).uniq
-      new_time = @prompt.select("Choose a new time", time_list, filter: true, cycle: true)
+      binding.pry
+      new_time = @prompt.select("Choose a new time", time_list, filter: true, cycle: true, symbols: {marker: '🍿'})
       ticket.showtime.update(time: new_time)
     when "Ticket quantity"
       ticket_quantity_list = (1..5).to_a
@@ -134,7 +140,8 @@ class CommandLineInterface
         'Change how many tickets you want',
         ticket_quantity_list,
         filter: true,
-        cycle: true
+        cycle: true,
+        symbols: {marker: '🍿'}
       )
       ticket.update(ticket_quantity: new_ticket_quantity)
     end
@@ -147,7 +154,12 @@ class CommandLineInterface
       { name: 'Y', value: 'y'},
       { name: 'N', value: 'n'}
     ]
-    delete_check = @prompt.select("Are you sure you want to delete the reserved ticket(s)?", options, cycle: true)
+    delete_check = @prompt.select(
+      "Are you sure you want to delete the reserved ticket(s)?",
+      options,
+      cycle: true,
+      symbols: {marker: '🍿'}
+    )
     case delete_check
     when 'y'
       ticket.delete
@@ -163,7 +175,8 @@ class CommandLineInterface
       'Choose your movie',
       movie_list,
       filter: true,
-      cycle: true
+      cycle: true,
+      symbols: {marker: '🍿'}
     )
     movie = Movie.find_by(title: chosen_movie)
     theater_list = movie.theaters.map(&:name).uniq
@@ -171,14 +184,16 @@ class CommandLineInterface
       'Choose your theater',
       theater_list,
       filter: true,
-      cycle: true
+      cycle: true,
+      symbols: {marker: '🍿'}
     )
     time_list = movie.showtimes.map(&:time)
     chosen_time = @prompt.select(
       'Choose your date and time',
       time_list,
       filter: true,
-      cycle: true
+      cycle: true,
+      symbols: {marker: '🍿'}
     )
     showtime = movie.showtimes.find_by(time: chosen_time)
     ticket_quantity_list = (1..5).to_a
@@ -186,7 +201,8 @@ class CommandLineInterface
       'How many tickets would you like?',
       ticket_quantity_list,
       filter: true,
-      cycle: true
+      cycle: true,
+      symbols: {marker: '🍿'}
     )
     Ticket.create(
       user_id: user.id,
