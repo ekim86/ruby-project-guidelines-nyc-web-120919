@@ -1,5 +1,7 @@
 class CommandLineInterface
 
+  
+
   def greet
     puts "Welcome to Movie Reservations! 🎬  🍿"
   end
@@ -12,197 +14,199 @@ class CommandLineInterface
       {name: 'Exit', value: 3}
     ]
   
-    user_input = @prompt.select('What would you like to do?', choices) do |menu|
-      menu.choice 'Login', -> do
-        user_email_input = @prompt.ask("Email:")
-        user = User.find_by(email: user_email_input)
-        user_password_input = @prompt.mask("Password:")
-        if user.password != user_password_input
-          puts "Wrong password, please try again."
-          attempt = 0
-          while attempt < 2
-            user_password_input = @prompt.mask("Password:")
-            if user.password == user_password_input
-              puts @pastel.bright_magenta("Hello #{user.name.capitalize}")
-              # can delete hello
-              # can hit another method
-              # binding.pry
-              break
-            end
-            puts "Wrong password, please try again."
-            attempt += 1
-            # figure out how to make user nil on the 3rd attempt
-          end
-        end
-        user
-        # puts pastel.bright_cyan("Hello #{user.name.capitalize}")
-        # still shows up when you exit with wrong password
-      end
-      menu.choice 'Create an account', -> do
-        user_name_input = @prompt.ask("Please enter your name:")
-        user_email_input = @prompt.ask("Please enter your email address:")
-        user_password_input = @prompt.mask("Please create a password:")
-        User.create(
-          name: user_name_input,
-          email: user_email_input,
-          password: user_password_input
-        )
-      end
+    user_input = @prompt.select('What would you like to do?', choices, cycle: true) do |menu|
+      menu.choice 'Login', -> { login }
+      menu.choice 'Create an account', -> { create_account }
       menu.choice 'Exit', -> do
         exit_app
       end
     end
   end
 
+  def login
+    user_email_input = @prompt.ask("Email:")
+    user = User.find_by(email: user_email_input)
+    attempt = 1
+    while attempt < 4
+      user_password_input = @prompt.mask("Password:")
+      if user.password == user_password_input
+        puts @pastel.bright_cyan(@font.write("Hi #{user.name}"))
+        break
+      elsif user.password != user_password_input 
+        @prompt.error "Wrong password, please try again."
+        user = nil if attempt == 3
+      end
+      attempt += 1
+    end
+    user
+  end
+
+  def create_account
+      user_name_input = @prompt.ask("Please enter your name:")
+      user_email_input = @prompt.ask("Please enter your email address:")
+      user_password_input = @prompt.mask("Please create a password:")
+      User.create(
+        name: user_name_input,
+        email: user_email_input,
+        password: user_password_input
+      )
+  end
 
   def choices(user)
     
     choices = [
       {name: 'See all reserved tickets', value: 1},
-      {name: 'Make a reservation', value: 2},
+      {name: 'Make a ticket', value: 2},
       {name: 'Exit', value: 3}
     ]
 
-    user_input = @prompt.select('Please select a prompt', choices)
+    user_input = @prompt.select('Please select a prompt', choices, cycle: true)
   end
 
-  def all_reservations(user)
-    user_reservations = user.reservations.reload
-    reservations = user_reservations.map do |reservation|
+  def all_tickets(user)
+    # binding.pry
+    user_tickets = user.tickets.reload
+    tickets = user_tickets.map do |ticket|
       {
-        name: "🙌  You reserved #{reservation.ticket_quantity} ticket(s) for #{reservation.movie.title}\n-----------------------------------------------",
-        value: reservation.id
+        name: "🙌  You reserved #{ticket.ticket_quantity} ticket(s) for #{ticket.movie.title}\n-----------------------------------------------",
+        value: ticket.id
       }
     end
-    reservations << { name: 'Go Back', value: 0}
+    tickets << { name: 'Go Back', value: 0}
 
-    selected_reservation_id = @prompt.select('Select to see more details', reservations)
+    selected_ticket_id = @prompt.select('Select to see more details', tickets, cycle: true)
 
-    if selected_reservation_id > 0
-      selected_reservation = Reservation.find(selected_reservation_id)
-      reservation_detail(selected_reservation)
+    if selected_ticket_id > 0
+      selected_ticket = Ticket.find(selected_ticket_id)
+      ticket_detail(selected_ticket)
     end
   end
 
-  def reservation_detail(reservation)
+  def ticket_detail(ticket)
     puts "-----------------------------------------------"
-    puts "🎟  You have #{reservation.ticket_quantity} ticket(s) reserved for #{reservation.movie.title}"
+    print "🎟  You have "
+    print @pastel.bright_cyan("#{ticket.ticket_quantity} ticket(s) ")
+    print "reserved at "
+    puts @pastel.bright_cyan("#{ticket.theater.name}")
+    print "for "
+    print @pastel.bright_cyan("#{ticket.movie.title} ")
+    print "on "
+    print @pastel.bright_cyan("#{ticket.showtime.time.strftime("%A, %m/%d/%y")} ")
+    print "at "
+    puts @pastel.bright_cyan("#{ticket.showtime.time.strftime'%I:%M%p'}")
     puts "-----------------------------------------------"
     
     choices = [
-      { name: 'Update ticket reservation', value: 1 },
-      { name: 'Delete ticket reservation', value: 2 },
-      { name: 'Go back to all my ticket reservations', value: 3 }
+      { name: 'Update ticket', value: 1 },
+      { name: 'Remove ticket', value: 2 },
+      { name: 'Go back to all my movie tickets', value: 3 }
     ]
-    user_input = @prompt.select("Please choose the following", choices)
+    user_input = @prompt.select("Please choose the following", choices, cycle: true)
     case user_input
     when 1
-      update_reservation(reservation)
+      update_ticket(ticket)
     when 2
-      delete_reservation(reservation)
+      delete_ticket(ticket)
     when 3
-      all_reservations(reservation.user)
+      all_tickets(ticket.user)
     end
   end
 
-  def update_reservation(reservation)
-    reservation_detail = [
-      { name: "Movie: #{reservation.movie.title}", disabled: "👎  can't update" },
-      { name: "Time: #{reservation.movie.showtimes}", value: "Time" },
-      { name: "Ticket quantity: #{reservation.ticket_quantity}", value: "Ticket quantity"}
+  def update_ticket(ticket)
+    ticket_detail = [
+      { name: "Movie: #{ticket.movie.title}", disabled: "👎  can't update" },
+      { name: "Date: #{ticket.showtime.time.strftime("%m/%d/%y")}", value: "Showtime" },
+      { name: "Time: #{ticket.showtime.time.strftime'%I:%M%p'}", value: "Showtime" },
+      { name: "Theater: #{ticket.theater.name}", value: "Theater", disabled: "👎  can't update" },
+      { name: "Ticket quantity: #{ticket.ticket_quantity}", value: "Ticket quantity"}
     ]
-    user_input = @prompt.select('Choose what you would like to update:', reservation_detail)
+  
+    user_input = @prompt.select('Choose what you would like to update:', ticket_detail, cycle: true)
     case user_input
     when "Showtime"
-      time_list = ["12:00 PM", "12:15 PM", "12:30 PM", "12:45 PM", "1:00 PM"]
-      new_time = @prompt.select('Choose a new time', time_list, filter: true)
-      reservation.update(time: new_time)
+      # time_list = ticket.movie.showtimes.where(theater: ticket.theater)
+      time_list = ticket.theater.showtimes.where(movie: ticket.movie).map(&:time).uniq
+      new_time = @prompt.select("Choose a new time", time_list, filter: true, cycle: true)
+      ticket.showtime.update(time: new_time)
     when "Ticket quantity"
       ticket_quantity_list = (1..5).to_a
       new_ticket_quantity = @prompt.select(
         'Change how many tickets you want',
         ticket_quantity_list,
-        filter: true
+        filter: true,
+        cycle: true
       )
-      reservation.update(ticket_quantity: new_ticket_quantity)
+      ticket.update(ticket_quantity: new_ticket_quantity)
     end
 
-    reservation_detail(reservation)
+    ticket_detail(ticket)
   end
 
-  def delete_reservation(reservation)
+  def delete_ticket(ticket)
     options = [
       { name: 'Y', value: 'y'},
       { name: 'N', value: 'n'}
     ]
-    delete_check = @prompt.select("Are you sure you want to delete the reserved ticket(s)?", options)
+    delete_check = @prompt.select("Are you sure you want to delete the reserved ticket(s)?", options, cycle: true)
     case delete_check
     when 'y'
-      reservation.delete
-      all_reservations(reservation.user)
+      ticket.delete
+      all_tickets(ticket.user)
     when 'n'
-      reservation_detail(reservation)
+      ticket_detail(ticket)
     end
   end
   
-  def make_reservation(user)
+  def make_ticket(user)
     movie_list = Movie.all.map(&:title)
     chosen_movie = @prompt.select(
       'Choose your movie',
       movie_list,
-      filter: true
-      )
-      movie = Movie.find_by(title: chosen_movie)
-      year_list = [2019, 2020]
-      chosen_year = @prompt.select(
-        'Please select a year',
-        year_list,
-        filter: true
-        )
-        month_list = ["January", "February", "March", "April", "May", "June", "July", "August", "Septemer", "October", "November", "December"]
-        chosen_month = @prompt.select(
-          'Please select a month',
-          month_list,
-          filter: true
-          )
-          day_list = (1..31).to_a
-          chosen_day = @prompt.select(
-            'Please select a day',
-            day_list,
-            filter: true
-            )
-            time_list = ["12:00 PM", "12:15 PM", "12:30 PM", "12:45 PM", "1:00 PM"]
-            chosen_time = @prompt.select(
-              'Please select a time',
-              time_list,
-              filter: true
-              )
-              ticket_quantity_list = (1..5).to_a
-              chosen_ticket_quantity = @prompt.select(
-                'How many tickets would you like?',
-                ticket_quantity_list,
-                filter: true
-                )
-                Reservation.create(
-                  user_id: user.id,
-                  movie_id: movie.id,
-                  # month: chosen_month,
-                  # day: chosen_day,
-                  # year: chosen_year,
-                  # time: chosen_time,
-                  ticket_quantity: chosen_ticket_quantity
-                  )
-                end
+      filter: true,
+      cycle: true
+    )
+    movie = Movie.find_by(title: chosen_movie)
+    theater_list = movie.theaters.map(&:name).uniq
+    chosen_theater = @prompt.select(
+      'Choose your theater',
+      theater_list,
+      filter: true,
+      cycle: true
+    )
+    time_list = movie.showtimes.map(&:time)
+    chosen_time = @prompt.select(
+      'Choose your date and time',
+      time_list,
+      filter: true,
+      cycle: true
+    )
+    showtime = movie.showtimes.find_by(time: chosen_time)
+    ticket_quantity_list = (1..5).to_a
+    chosen_ticket_quantity = @prompt.select(
+      'How many tickets would you like?',
+      ticket_quantity_list,
+      filter: true,
+      cycle: true
+    )
+    Ticket.create(
+      user_id: user.id,
+      showtime_id: showtime.id,
+      ticket_quantity: chosen_ticket_quantity
+    )
+  end
                 
                 
-                def exit_app
+  def exit_app
     puts "See you next time! 👋"
+    puts @pastel.bright_cyan(@font.write("Bye"))
   end
 
   def run
     greet
-    @prompt =  TTY::Prompt.new
+    # @prompt =  TTY::Prompt.new
+    @prompt = TTY::Prompt.new(active_color: :bright_magenta)
     @pastel = Pastel.new
+    @font = TTY::Font.new(:starwars)
     user = start
     return exit_app if !user.is_a?(User)
 
@@ -210,9 +214,9 @@ class CommandLineInterface
     while user_input != 3
       case user_input
       when 1
-        all_reservations(user)
+        all_tickets(user)
       when 2
-        make_reservation(user)
+        make_ticket(user)
       end
       user_input = choices(user)
     end
