@@ -7,30 +7,26 @@ class CommandLineInterface
   end
 
   def start
-    
-    choices = [
-      {name: 'Login', value: 1},
-      {name: 'Create a username', value: 2},
-      {name: 'Exit', value: 3}
-    ]
-  
     user_input = @prompt.select(
       'What would you like to do?',
-        choices,
-        cycle: true,
-        symbols: {marker: '🍿'}
+      cycle: true,
+      symbols: {marker: '🍿'}
       ) do |menu|
       menu.choice 'Login', -> { login }
       menu.choice 'Create an account', -> { create_account }
-      menu.choice 'Exit', -> do
-        exit_app
-      end
+      menu.choice 'Exit', -> { exit_app }
     end
   end
 
   def login
     user_email_input = @prompt.ask("Email:")
-    user = User.find_by(email: user_email_input)
+    user = User.find_by(email: user_email_input.downcase)
+
+    if user.nil?
+      @prompt.error("Email does not exist please create a new account or try again")
+      return start
+    end
+
     attempt = 1
     while attempt < 4
       user_password_input = @prompt.mask("Password:")
@@ -47,21 +43,21 @@ class CommandLineInterface
   end
 
   def create_account
-      user_name_input = @prompt.ask("Please enter your name:")
-      user_email_input = @prompt.ask("Please enter your email address:")
-      user_password_input = @prompt.mask("Please create a password:")
-      User.create(
-        name: user_name_input,
-        email: user_email_input,
-        password: user_password_input
-      )
+    user_name_input = @prompt.ask("Please enter your name:")
+    user_email_input = @prompt.ask("Please enter your email address:")
+    user_password_input = @prompt.mask("Please create a password:")
+    User.create(
+      name: user_name_input,
+      email: user_email_input,
+      password: user_password_input
+    )
   end
 
   def choices(user)
     
     choices = [
       {name: 'See all reserved tickets', value: 1},
-      {name: 'Make a ticket', value: 2},
+      {name: 'Reserve a ticket', value: 2},
       {name: 'Exit', value: 3}
     ]
 
@@ -70,6 +66,7 @@ class CommandLineInterface
 
   def all_tickets(user)
     # binding.pry
+    # if none reserved then put You do not have any reserved tickets
     user_tickets = user.tickets.reload
     tickets = user_tickets.map do |ticket|
       {
@@ -77,7 +74,11 @@ class CommandLineInterface
         value: ticket.id
       }
     end
-    tickets << { name: 'Go Back', value: 0}
+    tickets << { name: 'Go Back', value: 0 }
+
+    if tickets.count == 1
+      @prompt.error("You have no movie tickets go back to reserve a ticket.")
+    end
 
     selected_ticket_id = @prompt.select('Select to see more details', tickets, cycle: true, symbols: {marker: '🍿'})
 
@@ -119,10 +120,9 @@ class CommandLineInterface
 
   def update_ticket(ticket)
     ticket_detail = [
-      { name: "Movie: #{ticket.movie.title}", disabled: "👎  can't update" },
-      { name: "Date: #{ticket.showtime.time.strftime("%m/%d/%y")}", value: "Showtime" },
-      { name: "Time: #{ticket.showtime.time.strftime'%I:%M%p'}", value: "Showtime" },
-      { name: "Theater: #{ticket.theater.name}", value: "Theater", disabled: "👎  can't update" },
+      { name: "Movie: #{ticket.movie.title}", disabled: "🚫  can't update 🚫" },
+      { name: "Date & Time: #{ticket.showtime.time.strftime("%A, %m/%d/%y, %I:%M %p")}", value: "Showtime" },
+      { name: "Theater: #{ticket.theater.name}", value: "Theater", disabled: "🚫  can't update 🚫" },
       { name: "Ticket quantity: #{ticket.ticket_quantity}", value: "Ticket quantity"}
     ]
   
@@ -130,16 +130,17 @@ class CommandLineInterface
     case user_input
     when "Showtime"
       # time_list = ticket.movie.showtimes.where(theater: ticket.theater)
-      time_list = ticket.theater.showtimes.where(movie: ticket.movie).map(&:time).uniq
-      # binding.pry
-      new_time = @prompt.select("Choose a new time", time_list, filter: true, cycle: true, symbols: {marker: '🍿'})
-      ticket.showtime.update(time: new_time)
+      showtime_list = ticket.theater.showtimes.where(movie: ticket.movie).uniq
+      showtime_list_format = showtime_list.map do |showtime|
+        { name: showtime.time.strftime("%A, %m/%d/%y, %I:%M %p"), value: showtime.id }
+      end
+      new_showtime_id = @prompt.select("Choose a new time", showtime_list_format, cycle: true, symbols: {marker: '🍿'})
+      ticket.update(showtime_id: new_showtime_id)
     when "Ticket quantity"
-      ticket_quantity_list = (1..5).to_a
+      ticket_quantity_list = (1..9).to_a
       new_ticket_quantity = @prompt.select(
         'Change how many tickets you want',
         ticket_quantity_list,
-        filter: true,
         cycle: true,
         symbols: {marker: '🍿'}
       )
@@ -187,26 +188,26 @@ class CommandLineInterface
       cycle: true,
       symbols: {marker: '🍿'}
     )
-    time_list = movie.showtimes.map(&:time)
+    time_list = movie.showtimes.sort_by(&:time)
+    time_list_format = time_list.map do |showtime|
+      { name: showtime.time.strftime("%A, %m/%d/%y, %I:%M %p"), value: showtime.id }
+    end
     chosen_time = @prompt.select(
       'Choose your date and time',
-      time_list,
-      filter: true,
+      time_list_format,
       cycle: true,
       symbols: {marker: '🍿'}
     )
-    showtime = movie.showtimes.find_by(time: chosen_time)
-    ticket_quantity_list = (1..5).to_a
+    ticket_quantity_list = (1..9).to_a
     chosen_ticket_quantity = @prompt.select(
       'How many tickets would you like?',
       ticket_quantity_list,
-      filter: true,
       cycle: true,
       symbols: {marker: '🍿'}
     )
     Ticket.create(
       user_id: user.id,
-      showtime_id: showtime.id,
+      showtime_id: chosen_time,
       ticket_quantity: chosen_ticket_quantity
     )
   end

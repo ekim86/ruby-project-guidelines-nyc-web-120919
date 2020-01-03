@@ -30,7 +30,7 @@ class CommandLineInterface
 
   def login
     user_email_input = @prompt.ask("Email:")
-    user = User.find_by(email: user_email_input)
+    user = User.find_by(email: user_email_input.downcase)
     attempt = 1
     while attempt < 4
       user_password_input = @prompt.mask("Password:")
@@ -61,7 +61,7 @@ class CommandLineInterface
     
     choices = [
       {name: 'See all reserved tickets', value: 1},
-      {name: 'Make a ticket', value: 2},
+      {name: 'Reserve a ticket', value: 2},
       {name: 'Exit', value: 3}
     ]
 
@@ -119,10 +119,10 @@ class CommandLineInterface
 
   def update_ticket(ticket)
     ticket_detail = [
-      { name: "Movie: #{ticket.movie.title}", disabled: "👎  can't update" },
+      { name: "Movie: #{ticket.movie.title}", disabled: "🚫  can't update 🚫" },
       { name: "Date: #{ticket.showtime.time.strftime("%m/%d/%y")}", value: "Showtime" },
       { name: "Time: #{ticket.showtime.time.strftime'%I:%M%p'}", value: "Showtime" },
-      { name: "Theater: #{ticket.theater.name}", value: "Theater", disabled: "👎  can't update" },
+      { name: "Theater: #{ticket.theater.name}", value: "Theater", disabled: "🚫  can't update 🚫" },
       { name: "Ticket quantity: #{ticket.ticket_quantity}", value: "Ticket quantity"}
     ]
   
@@ -131,15 +131,14 @@ class CommandLineInterface
     when "Showtime"
       # time_list = ticket.movie.showtimes.where(theater: ticket.theater)
       time_list = ticket.theater.showtimes.where(movie: ticket.movie).map(&:time).uniq
-      binding.pry
-      new_time = @prompt.select("Choose a new time", time_list, filter: true, cycle: true, symbols: {marker: '🍿'})
+      # binding.pry
+      new_time = @prompt.select("Choose a new time", time_list, cycle: true, symbols: {marker: '🍿'})
       ticket.showtime.update(time: new_time)
     when "Ticket quantity"
-      ticket_quantity_list = (1..5).to_a
+      ticket_quantity_list = (1..9).to_a
       new_ticket_quantity = @prompt.select(
         'Change how many tickets you want',
         ticket_quantity_list,
-        filter: true,
         cycle: true,
         symbols: {marker: '🍿'}
       )
@@ -192,16 +191,14 @@ class CommandLineInterface
       'Choose your date and time',
       time_list,
       filter: true,
-      cycle: true,
       symbols: {marker: '🍿'}
     )
     showtime = movie.showtimes.find_by(time: chosen_time)
-    ticket_quantity_list = (1..5).to_a
+    ticket_quantity_list = (1..9).to_a
     chosen_ticket_quantity = @prompt.select(
       'How many tickets would you like?',
       ticket_quantity_list,
       filter: true,
-      cycle: true,
       symbols: {marker: '🍿'}
     )
     Ticket.create(
