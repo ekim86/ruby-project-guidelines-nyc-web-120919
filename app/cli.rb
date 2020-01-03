@@ -21,7 +21,7 @@ class CommandLineInterface
     user = User.find_by(email: user_email_input.downcase)
 
     if user.nil?
-      @prompt.error("Email does not exist please create a new account or try again")
+      @prompt.error("Email does not exist, please create a new account or try again")
       return start
     end
 
