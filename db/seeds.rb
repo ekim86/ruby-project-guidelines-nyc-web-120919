@@ -1,7 +1,7 @@
 User.destroy_all
 Movie.destroy_all
 Reservation.destroy_all
-Showtime.destroy_all
+#Showtime.destroy_all
 
 sasha = User.create(name: "Sasha", email: "sasha@email.com", password: "5555")
 eunice = User.create(name: "Eunice", email: "eunice@email.com", password: "1111")
