@@ -1,7 +1,5 @@
 class CommandLineInterface
 
-  
-
   def greet
     puts "Welcome to Movie Reservations! 🎬  🍿"
   end
@@ -30,7 +28,7 @@ class CommandLineInterface
     attempt = 1
     while attempt < 4
       user_password_input = @prompt.mask("Password:")
-      if user.password == user_password_input
+      if user.password == user_password_input.downcase
         puts @pastel.bright_cyan(@font.write("Hi #{user.name}"))
         break
       elsif user.password != user_password_input 
@@ -70,7 +68,7 @@ class CommandLineInterface
     user_tickets = user.tickets.reload
     tickets = user_tickets.map do |ticket|
       {
-        name: "🙌  You reserved #{ticket.ticket_quantity} ticket(s) for #{ticket.movie.title}\n-----------------------------------------------",
+        name: "🙌  #{ticket.movie.title} ➡️ #{ticket.showtime.time.strftime("%A, %m/%d/%y")}\n-----------------------------------------------",
         value: ticket.id
       }
     end
@@ -130,7 +128,7 @@ class CommandLineInterface
     case user_input
     when "Showtime"
       # time_list = ticket.movie.showtimes.where(theater: ticket.theater)
-      showtime_list = ticket.theater.showtimes.where(movie: ticket.movie).uniq
+      showtime_list = ticket.theater.showtimes.where(movie: ticket.movie).distinct
       showtime_list_format = showtime_list.map do |showtime|
         { name: showtime.time.strftime("%A, %m/%d/%y, %I:%M %p"), value: showtime.id }
       end
