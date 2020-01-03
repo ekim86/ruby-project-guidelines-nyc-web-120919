@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 class CommandLineInterface
 
   def greet
@@ -241,4 +239,3 @@ class CommandLineInterface
   end
 
 end
->>>>>>> 99ec6c67186b2860cb44a6bc4c9b1113d35eec15
