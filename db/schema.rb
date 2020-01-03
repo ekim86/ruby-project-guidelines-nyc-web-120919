@@ -10,23 +10,36 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20191230213429) do
+ActiveRecord::Schema.define(version: 20200101211234) do
 
   create_table "movies", force: :cascade do |t|
     t.string   "title"
     t.string   "synopsis"
-    t.string   "showtimes"
     t.string   "content_rating"
     t.datetime "created_at",     null: false
     t.datetime "updated_at",     null: false
   end
 
-  create_table "reservations", force: :cascade do |t|
-    t.integer  "user_id"
+  create_table "showtimes", force: :cascade do |t|
+    t.datetime "time"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.integer  "movie_id"
+    t.integer  "theater_id"
+  end
+
+  create_table "theaters", force: :cascade do |t|
+    t.string   "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "tickets", force: :cascade do |t|
     t.integer  "ticket_quantity"
     t.datetime "created_at",      null: false
     t.datetime "updated_at",      null: false
+    t.integer  "showtime_id"
+    t.integer  "user_id"
   end
 
   create_table "users", force: :cascade do |t|

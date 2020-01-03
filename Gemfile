@@ -12,6 +12,7 @@ gem "rest-client"
 gem 'pastel'
 gem 'tty-table'
 gem 'tty-font'
+
 # gem 'jeweler'
 # gem 'shoulda'
 # gem 'httparty'
